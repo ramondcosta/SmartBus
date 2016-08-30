@@ -76,7 +76,7 @@ void loop(){
   	}
 
   	if(count < 6){
-	  	delay(2000);
+	  	delay(50);
 	  	//strcpy(req,"SET INFO temperatureSensor {\"collect\":400,\"publish\":2000}");
       strcpy(req,"s:1");
 	  	callback("dev/ufbaino03",(byte*)req,strlen(req));

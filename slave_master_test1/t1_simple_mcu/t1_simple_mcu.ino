@@ -69,7 +69,6 @@ byte ip[4] =        { 127, 0, 0, 1 };
 unsigned long int lastTime;
 char vector_response[60];
 
-
 typedef struct sensorStruct{
   int id;
   uint8_t type;
@@ -89,25 +88,32 @@ bool set(uint32_t hash, uint8_t code, void* response) {
   return true;
 } 
 
+
+//  Sensors functions
+/*<sensorFunctions>*/
 double current_sensor(EnergyMonitor emon){
   return emon.calcIrms(1480);
-
 }
 int luminosity_sensor(int PIN){
   return analogRead(PIN);
 }
-
 int dht_temperature_sensor(DHT dht){
   return (int)dht.readTemperature();
 }
 int dht_humidity_sensor(DHT dht){
   return (int)dht.readHumidity();
 }
+/*</sensorFunctions>*/
 
+/*
+  Sensor ID's defines
+*/
+//  <sensorsID>
 #define ID_current  0
 #define ID_temp     1
 #define ID_humid    2
 #define ID_lumin    3
+//  </sensorsID>
 
 bool mapID(uint32_t hash, void* response, uint8_t code) {
   uint8_t id;
@@ -134,9 +140,10 @@ bool mapID(uint32_t hash, void* response, uint8_t code) {
   return true;
 }
 
-bool get(uint8_t id, char* response) {
-  //ATMSerial.println("aki2");
+bool get(uint8_t id,char flag) {
+  char* response[15];
   double aux;
+
   switch(id){
     case ID_current:
       aux = current_sensor(emon1);
@@ -154,34 +161,60 @@ bool get(uint8_t id, char* response) {
       aux = luminosity_sensor(LUMINOSITY);
       break;
     default:
-      //ATMSerial.println("falso!");
       return false;
   }
-  //ATMSerial.println("aki3");
+
   switch(sensores[id].type){
       case float_T:
+        //<debug>
         ATMSerial.println("É float");
         dtostrf(aux,2,2,response);
-        // do something
         break;
       case int_T:
+        //<debug>
         ATMSerial.println("É int");
         itoa((int)aux,response,10);
-        // do something
         break;
       default:
+        //<debug>
         ATMSerial.println("É alguma coisa...");
         return false;
   }
+
+  /*
+    Sends the response to master
+    <format> id:value:flag
+    <example> response:
+      (1) 9>65.34>s
+        '9' is the id
+        '65.34' is the value
+        's' is the flag
+      (2) 12>27>f
+        '12' is the id
+        '27' is the value
+        'f' is the flag
+    </example>
+  */
   Serial.print(id);
   Serial.print(">");
   Serial.println(response);
+  Serial.print(">");
+  Serial.println(flag);
+  //
+
+  //<debug> Prints the message to master
   ATMSerial.print(id);
   ATMSerial.print(">");
   ATMSerial.println(response);
+  ATMSerial.print(id);
+  ATMSerial.print(">");
+  ATMSerial.println(response);
+  //</debug>
+
   return true;
 }
 
+//  Publish method
 void serial_publish(char *topic, char *output) {
   Serial.print(topic);
   Serial.print('>');
@@ -189,9 +222,16 @@ void serial_publish(char *topic, char *output) {
 }
 
 void callback(char* buffer,int length){
-  //ATMSerial.println("aki1");
-  char random[20];
-  get(atoi(&buffer[2]),random);
+  /*
+    <example> request  :
+      s:2
+      's' is the flag
+      '12' is the feature ID
+    </example>
+    So atoi(&buffer[2]) is the ID 
+    and buffer[0] is the flag
+  */
+  get(atoi(&buffer[2]),buffer[0]);
 }
 
 void serial_read(char readch, byte *buffer, int len) {
@@ -201,11 +241,9 @@ void serial_read(char readch, byte *buffer, int len) {
     switch (readch) {
       case '\n':
         //ATMSerial.print("MESSAGE RECEIVED ::::: ");
-        //ATMSerial.print("RECEIVED:");
         ATMSerial.println((char*)buffer);
+        /*Sends the message and its length(pos) to the callback function*/
         callback((char*)buffer, pos);
-
-        //delay(1500);
         pos = 0;
         break;
       default:
@@ -222,15 +260,19 @@ void setup() {
 
   Serial.begin(115200);
   ATMSerial.begin(115200);
+
   dht.begin();
   pinMode(DHTPIN, INPUT);
 
   emon1.current(CURRENT01, DEFAULT_ADJUST);
 
+  // type declarations
+  /*<declarations>*/
   sensores[0].type = float_T;
   sensores[1].type = int_T;
   sensores[2].type = float_T;
   sensores[3].type = int_T;
+  /*</declarations>*/
 
   ATMSerial.println("ATMEGA ready and waiting for instructions!");
 

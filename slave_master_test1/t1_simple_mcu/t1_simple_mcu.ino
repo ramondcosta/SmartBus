@@ -141,7 +141,7 @@ bool mapID(uint32_t hash, void* response, uint8_t code) {
 }
 
 bool get(uint8_t id,char flag) {
-  char* response[15];
+  char response[15];
   double aux;
 
   switch(id){
@@ -198,17 +198,17 @@ bool get(uint8_t id,char flag) {
   Serial.print(id);
   Serial.print(">");
   Serial.println(response);
-  Serial.print(">");
-  Serial.println(flag);
+  //Serial.print(">");
+  //Serial.println(flag);
   //
 
   //<debug> Prints the message to master
   ATMSerial.print(id);
   ATMSerial.print(">");
   ATMSerial.println(response);
-  ATMSerial.print(id);
-  ATMSerial.print(">");
-  ATMSerial.println(response);
+  //ATMSerial.print(id);
+  //ATMSerial.print(">");
+  //ATMSerial.println(response);
   //</debug>
 
   return true;
@@ -240,7 +240,7 @@ void serial_read(char readch, byte *buffer, int len) {
   if (readch > 0) {
     switch (readch) {
       case '\n':
-        //ATMSerial.print("MESSAGE RECEIVED ::::: ");
+        ATMSerial.print("MESSAGE RECEIVED ::::: ");
         ATMSerial.println((char*)buffer);
         /*Sends the message and its length(pos) to the callback function*/
         callback((char*)buffer, pos);
@@ -268,9 +268,9 @@ void setup() {
 
   // type declarations
   /*<declarations>*/
-  sensores[0].type = float_T;
+  sensores[0].type = int_T;
   sensores[1].type = int_T;
-  sensores[2].type = float_T;
+  sensores[2].type = int_T;
   sensores[3].type = int_T;
   /*</declarations>*/
 
@@ -281,6 +281,6 @@ void setup() {
 // LOOP
 void loop() {
   static byte buffer[100];
-  serial_read(ATMSerial.read(), buffer, 100);
+  serial_read(Serial.read(), buffer, 100);
 
 }

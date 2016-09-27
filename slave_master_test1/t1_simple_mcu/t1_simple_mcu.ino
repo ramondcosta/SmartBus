@@ -92,7 +92,7 @@ bool set(uint32_t hash, uint8_t code, void* response) {
 //  Sensors functions
 /*<sensorFunctions>*/
 double current_sensor(EnergyMonitor emon){
-  return emon.calcIrms(1480);
+  return emon.calcIrms(280);
 }
 int luminosity_sensor(int PIN){
   return analogRead(PIN);
@@ -268,7 +268,7 @@ void setup() {
 
   // type declarations
   /*<declarations>*/
-  sensores[0].type = int_T;
+  sensores[ID_current].type = float_T;
   sensores[1].type = int_T;
   sensores[2].type = int_T;
   sensores[3].type = int_T;
